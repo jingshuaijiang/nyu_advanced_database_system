@@ -11,12 +11,12 @@ public class Site {
      *
      * @param siteId
      */
-    public Site(int siteId)
+    public Site(int siteId,int arraynums)
     {
         this.siteId = siteId;
-        valueArray = new int[20];
-        committed_valueArray = new int[20];
-        for(int i=0;i<20;i++)
+        valueArray = new int[arraynums];
+        committed_valueArray = new int[arraynums];
+        for(int i=0;i<arraynums;i++)
         {
             valueArray[i] = (i+1)*10;
             committed_valueArray[i] = (i+1)*10;
@@ -30,7 +30,9 @@ public class Site {
      */
     public boolean HasVariable(int variableId)
     {
-
+        if(variableId%2==0)
+            return true;
+        return siteId==variableId%10;
     }
 
     /**

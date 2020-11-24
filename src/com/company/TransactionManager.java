@@ -4,7 +4,7 @@ import java.util.*;
 public class TransactionManager {
     List<Transaction> LiveTransList;
     HashMap<Integer,Transaction> TransactionMap;
-
+    DataManager dm;
     /**
      *
      */
@@ -12,6 +12,7 @@ public class TransactionManager {
     {
         LiveTransList = new LinkedList<>();
         TransactionMap = new HashMap<>();
+        dm = new DataManager();
     }
 
     /**
