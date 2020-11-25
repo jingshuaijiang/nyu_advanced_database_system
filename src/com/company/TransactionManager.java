@@ -5,6 +5,7 @@ public class TransactionManager {
     List<Transaction> LiveTransList;
     HashMap<Integer,Transaction> TransactionMap;
     DataManager dm;
+    int timestamp;
     /**
      *
      */
@@ -20,9 +21,11 @@ public class TransactionManager {
      * @param TransactionId
      * @return
      */
-    public Transaction get(int TransactionId)
+    public Transaction get(int TransactionId) throws Exception
     {
-
+        if(!TransactionMap.containsKey(TransactionId))
+            throw new Exception("No such alive transaction "+TransactionId);
+        return TransactionMap.get(TransactionId);
     }
 
     /**
@@ -46,18 +49,23 @@ public class TransactionManager {
      * begin transaction, initialize a transaction object.
      * @param TransactionId
      */
-    public void begin(int TransactionId)
-    {
-
+    public void begin(int TransactionId) throws Exception {
+        TransactionInitChecker(TransactionId);
+        Transaction transaction = new Transaction(this.timestamp,false);
+        TransactionMap.put(TransactionId,transaction);
+        LiveTransList.add(transaction);
     }
 
     /**
      * begin transaction, initialize a read-only transaction object.
      * @param TransactionId
      */
-    public void beginRO(int TransactionId)
+    public void beginRO(int TransactionId) throws Exception
     {
-
+        TransactionInitChecker(TransactionId);
+        Transaction transaction = new Transaction(this.timestamp,true);
+        TransactionMap.put(TransactionId,transaction);
+        LiveTransList.add(transaction);
     }
 
     /**
@@ -65,8 +73,9 @@ public class TransactionManager {
      * @param TransactionId
      * @param Var
      */
-    public void Read(int TransactionId, String Var)
+    public void Read(int TransactionId, String Var) throws Exception
     {
+        AliveChecker(TransactionId);
 
     }
 
@@ -76,9 +85,9 @@ public class TransactionManager {
      * @param Var
      * @param Value
      */
-    public void Write(int TransactionId, String Var, int Value)
+    public void Write(int TransactionId, String Var, int Value) throws Exception
     {
-
+        AliveChecker(TransactionId);
     }
 
     /**
@@ -87,7 +96,8 @@ public class TransactionManager {
      */
     public void BlockTransaction(int TransactionId)
     {
-
+        Transaction transaction = TransactionMap.get(TransactionId);
+        transaction.blocked = true;
     }
 
     /**
@@ -105,6 +115,22 @@ public class TransactionManager {
     public void Dump()
     {
 
+    }
+
+    public void TransactionInitChecker(int TransactionId) throws Exception
+    {
+        if(TransactionMap.containsKey(TransactionId))
+        {
+            throw new Exception("Transaction has already been initilized "+TransactionId);
+        }
+    }
+
+    public void AliveChecker(int TransactionId) throws Exception
+    {
+        if(!TransactionMap.containsKey(TransactionId))
+        {
+            throw new Exception("Transaction not alive "+TransactionId);
+        }
     }
 
 
