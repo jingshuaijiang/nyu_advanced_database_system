@@ -2,7 +2,7 @@ package com.company;
 
 public class Transaction {
 
-    boolean locked;
+    boolean blocked;
 
     int start_time;
 
