@@ -1,4 +1,5 @@
 package com.company;
+import javax.xml.crypto.Data;
 import java.util.*;
 
 public class TransactionManager {
@@ -6,16 +7,14 @@ public class TransactionManager {
     HashMap<Integer,Transaction> TransactionMap;
     DataManager dm;
     int timestamp;
-    /**
-     *
-     */
+
+
     public TransactionManager()
     {
         LiveTransList = new LinkedList<>();
         TransactionMap = new HashMap<>();
         dm = new DataManager();
     }
-
     /**
      * get the transaction object whose id is transactionid
      * @param TransactionId
@@ -28,23 +27,10 @@ public class TransactionManager {
         return TransactionMap.get(TransactionId);
     }
 
-    /**
-     * Detect deadlock
-     */
-    public void DetectDeadLock()
+    public void ProcessCommand()
     {
 
     }
-
-    /**
-     * abort the transaction object whose id is transactionid
-     * @param TransactionId
-     */
-    public void AbortTransaction(int TransactionId)
-    {
-
-    }
-
     /**
      * begin transaction, initialize a transaction object.
      * @param TransactionId
@@ -116,6 +102,78 @@ public class TransactionManager {
     {
 
     }
+
+    /**
+     * Acquirereadlock
+     * @param TransactionId
+     * @param VariableId
+     * @return
+     */
+    public boolean AcquireReadLock(int TransactionId, int VariableId)
+    {
+        if(VariableId%2==1)
+        {
+            int siteId = VariableId%10;
+            Site site = dm.get(siteId);
+            if(site.locktable[VariableId].size()==0)
+            {
+                Lock lock = new Lock();
+                lock.Locktype = 'R';
+                site.locktable[VariableId].add(lock);
+                return true;
+            }
+            else
+            {
+                for(Lock currentlock:site.locktable[VariableId])
+                {
+                    if(currentlock.Locktype=='w')
+                        return false;
+                }
+                Lock lock = new Lock();
+                lock.Locktype = 'R';
+                site.locktable[VariableId].add(lock);
+                return true;
+            }
+
+        }
+        else
+        {
+            for(int i=0;i<DataManager.sitenums;i++)
+            {
+                Site site = dm.get(i+1);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * acquire write lock
+     * @param TransactionId
+     * @param VariableId
+     * @return
+     */
+    public boolean AcquireWriteLock(int TransactionId,int VariableId)
+    {
+
+    }
+
+    /**
+     * Detect deadlock
+     */
+    public void DetectDeadLock()
+    {
+
+    }
+
+    /**
+     * abort the transaction object whose id is transactionid
+     * @param TransactionId
+     */
+    public void AbortTransaction(int TransactionId)
+    {
+
+    }
+
 
     public void TransactionInitChecker(int TransactionId) throws Exception
     {

@@ -1,13 +1,14 @@
 package com.company;
-
+import java.util.*;
 public class Site {
 
     int siteId;
     int[] valueArray;
     int[] committed_valueArray;
+    boolean failed;
     boolean justRecovery;
     public static final int arraynums = 20;
-    Lock[] locktable;
+    List<Lock>[] locktable;
     /**
      *
      * @param siteId
@@ -22,7 +23,11 @@ public class Site {
             valueArray[i] = (i+1)*10;
             committed_valueArray[i] = (i+1)*10;
         }
-        locktable = new Lock[arraynums];
+        locktable = new ArrayList[arraynums];
+        for(int i=0;i<arraynums;i++)
+        {
+            locktable[i] = new ArrayList<>();
+        }
     }
 
     /**
