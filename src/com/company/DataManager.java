@@ -16,5 +16,10 @@ public class DataManager {
         }
     }
 
+    public Site get(int siteId)
+    {
+        return SiteMap.get(siteId);
+    }
+
 
 }
