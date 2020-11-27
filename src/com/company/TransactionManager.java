@@ -3,7 +3,6 @@ import javax.xml.crypto.Data;
 import java.util.*;
 
 public class TransactionManager {
-    List<Transaction> LiveTransList;
     HashMap<Integer,Transaction> TransactionMap;
     DataManager dm;
     int timestamp;
@@ -11,7 +10,6 @@ public class TransactionManager {
 
     public TransactionManager()
     {
-        LiveTransList = new LinkedList<>();
         TransactionMap = new HashMap<>();
         dm = new DataManager();
     }
@@ -39,7 +37,7 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,false);
         TransactionMap.put(TransactionId,transaction);
-        LiveTransList.add(transaction);
+
     }
 
     /**
@@ -51,7 +49,7 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
-        LiveTransList.add(transaction);
+
     }
 
     /**
