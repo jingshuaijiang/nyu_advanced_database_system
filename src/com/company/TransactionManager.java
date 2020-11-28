@@ -57,7 +57,7 @@ public class TransactionManager {
      * @param TransactionId
      * @param Var
      */
-    public void Read(int TransactionId, String Var) throws Exception
+    public void Read(int TransactionId, int VarId) throws Exception
     {
         AliveChecker(TransactionId);
 
@@ -69,7 +69,7 @@ public class TransactionManager {
      * @param Var
      * @param Value
      */
-    public void Write(int TransactionId, String Var, int Value) throws Exception
+    public void Write(int TransactionId, int VarId, int Value) throws Exception
     {
         AliveChecker(TransactionId);
     }

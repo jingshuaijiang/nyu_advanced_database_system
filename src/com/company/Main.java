@@ -1,6 +1,7 @@
 package com.company;
 import java.util.*;
 import java.io.*;
+
 public class Main {
 
 
@@ -12,38 +13,30 @@ public class Main {
         String inputfile = args[0];
         try {
             BufferedReader br = new BufferedReader(new FileReader(inputfile));
-            String query = br.readLine();
-            String[] res= Parser.parse(query);
-            if(res[0].equals("begin"))
-            {
+            String query;
+            while ((query = br.readLine()) != null) {
 
-            }
-            else if(res[0].equals("beginro"))
-            {
+                String[] res = Parser.parse(query);
+                if (res[0].equals("begin")) {
+                    tm.begin(Integer.parseInt(res[1]));
+                } else if (res[0].equals("beginro")) {
+                    if (!tm.beginRO(Integer.parse(res[1])))
+                        insWaitlist.add(res);
+                } else if (res[0].equals("R")) {
+                    if (!tm.Read(Integer.parseInt(res[1]), Integer.parseInt(res[2])))
+                        insWaitlist.add(res);
+                } else if (res[0].equals("W")) {
+                    if (!tm.Write(Integer.parseInt(res[1]), Integer.parseInt(res[2]), Integer.parseInt(res[3])))
+                        insWaitlist.add(res);
+                } else if (res[0].equals("recover")) {
 
-            }
-            else if(res[0].equals("R"))
-            {
+                } else if (res[0].equals("fail")) {
 
-            }
-            else if(res[0].equals("W"))
-            {
+                } else if (res[0].equals("dump")) {
 
-            }
-            else if(res[0].equals("recover"))
-            {
+                } else if (res[0].equals("end")) {
 
-            }
-            else if(res[0].equals("fail"))
-            {
-
-            }
-            else if(res[0].equals("dump"))
-            {
-
-            }
-            else if(res[0].equals("end"))
-            {
+                }
 
             }
 
@@ -51,8 +44,6 @@ public class Main {
             System.out.println("Problem with file");
             e.printStackTrace();
         }
-
-        while()
-	// write your code here
     }
+	// write your code here
 }
