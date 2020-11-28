@@ -52,12 +52,25 @@ public class TransactionManager {
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
         TakeSnapshot(TransactionId);
-
     }
 
     public void TakeSnapshot(int TransacionId)
     {
+        Transaction transaction = TransactionMap.get(TransacionId);
+        for(int i=1;i<=20;i++)
+        {
+            if(i%2==1)
+            {
+                int siteid = i%10+1;
+                if(dm.SiteFailed(siteid))
+                    continue;
 
+            }
+            else
+            {
+
+            }
+        }
     }
 
     /**
