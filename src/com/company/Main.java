@@ -18,7 +18,7 @@ public class Main {
             while ((true) {
                 String[] res = null;
                 inList = false;
-                if (insWaitlist.empty()) {
+                if (insWaitlist.isEmpty()) {
                     if ( (query = br.readLine()) != null)
                         res = Parser.parse(query);
                     else

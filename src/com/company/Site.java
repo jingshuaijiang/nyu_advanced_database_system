@@ -8,7 +8,9 @@ public class Site {
     boolean failed;
     boolean justRecovery;
     public static final int arraynums = 20;
-    List<Lock>[] locktable;
+    HashMap<Integer,List<Lock>> locktable;
+    HashMap<Integer,Integer> commitedtimetable;
+    int recoverytime;
     /**
      *
      * @param siteId
@@ -23,11 +25,7 @@ public class Site {
             valueArray[i] = (i+1)*10;
             committed_valueArray[i] = (i+1)*10;
         }
-        locktable = new ArrayList[arraynums];
-        for(int i=0;i<arraynums;i++)
-        {
-            locktable[i] = new ArrayList<>();
-        }
+        locktable = new HashMap<>();
         justRecovery = false;
     }
 
@@ -45,32 +43,36 @@ public class Site {
 
     public boolean CanGetReadLock(int transactionId,int variableId)
     {
-        if(locktable[variableId].size()==0)
+        if(!locktable.containsKey(variableId))
             return true;
         else
         {
-            if(locktable[variableId].get(0).Locktype=='w'&&locktable[variableId].get(0).transactionId!=transactionId)
+            if(locktable.get(variableId).get(0).Locktype=='w'&&locktable.get(variableId).get(0).transactionId!=transactionId)
                 return false;
             return true;
         }
     }
 
-    public boolean AcquireReadLock(int transactionId, int variableId)
-    {
-
-    }
-
     public void AddReadLock(int transactionId, int variableId,int timestamp)
     {
         Lock lock = new Lock('R',timestamp,transactionId);
-        locktable[variableId].add(lock);
+        if(!locktable.containsKey(variableId))
+            locktable.put(variableId,new ArrayList<>());
+        locktable.get(variableId).add(lock);
     }
 
     /**
      * when site failure, erase this site.
      */
-    public void EraseSite()
+    public void Sitefail()
     {
+        locktable.clear();
+    }
 
+    public void SiteRecover(int timestamp)
+    {
+        recoverytime = timestamp;
+        justRecovery = true;
+        failed = false;
     }
 }
