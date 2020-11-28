@@ -175,5 +175,14 @@ public class TransactionManager {
         }
     }
 
+    public boolean Recover(int SiteId) {
+
+        return true;
+    }
+
+    public boolean Fail(int SiteId) {
+
+        return true;
+    }
 
 }
