@@ -55,11 +55,6 @@ public class Site {
         }
     }
 
-    public boolean AcquireReadLock(int transactionId, int variableId)
-    {
-
-    }
-
     public void AddReadLock(int transactionId, int variableId,int timestamp)
     {
         Lock lock = new Lock('R',timestamp,transactionId);

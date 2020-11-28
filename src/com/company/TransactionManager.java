@@ -59,10 +59,15 @@ public class TransactionManager {
      * @param TransactionId
      * @param Var
      */
-    public void Read(int TransactionId, int VarId) throws Exception
+    public boolean Read(int TransactionId, int VarId) throws Exception
     {
         AliveChecker(TransactionId);
+        if(!AcquireReadLock(TransactionId,VarId))
+            return false;
+        else
+        {
 
+        }
     }
 
     /**
@@ -74,6 +79,7 @@ public class TransactionManager {
     public void Write(int TransactionId, int VarId, int Value) throws Exception
     {
         AliveChecker(TransactionId);
+
     }
 
     /**
@@ -117,14 +123,23 @@ public class TransactionManager {
             Site site = dm.get(siteId);
             if(site.CanGetReadLock(TransactionId,VariableId))
             {
-
+                site.AddReadLock(TransactionId,VariableId,timestamp);
+                return true;
             }
+            return false;
         }
         else
         {
             for(int i=0;i<DataManager.sitenums;i++)
             {
                 Site site = dm.get(i+1);
+                if(site.CanGetReadLock(TransactionId,VariableId))
+                {
+                    site.AddReadLock(TransactionId,VariableId,timestamp);
+                    return true;
+                }
+                else
+                    continue;
             }
         }
         return false;
