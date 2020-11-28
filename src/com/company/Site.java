@@ -28,6 +28,7 @@ public class Site {
         {
             locktable[i] = new ArrayList<>();
         }
+        justRecovery = false;
     }
 
     /**
@@ -40,6 +41,29 @@ public class Site {
         if(variableId%2==0)
             return true;
         return siteId==variableId%10;
+    }
+
+    public boolean CanGetReadLock(int transactionId,int variableId)
+    {
+        if(locktable[variableId].size()==0)
+            return true;
+        else
+        {
+            if(locktable[variableId].get(0).Locktype=='w'&&locktable[variableId].get(0).transactionId!=transactionId)
+                return false;
+            return true;
+        }
+    }
+
+    public boolean AcquireReadLock(int transactionId, int variableId)
+    {
+
+    }
+
+    public void AddReadLock(int transactionId, int variableId,int timestamp)
+    {
+        Lock lock = new Lock('R',timestamp,transactionId);
+        locktable[variableId].add(lock);
     }
 
     /**
