@@ -51,29 +51,41 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
+        TakeSnapshot(TransactionId);
+
+    }
+
+    public void TakeSnapshot(int TransacionId)
+    {
 
     }
 
     /**
      * read operation,
      * @param TransactionId
-     * @param Var
+     * @param VarId
      */
-    public void Read(int TransactionId, int VarId) throws Exception
+    public boolean Read(int TransactionId, int VarId) throws Exception
     {
         AliveChecker(TransactionId);
+        if(!AcquireReadLock(TransactionId,VarId))
+            return false;
+        else
+        {
 
+        }
     }
 
     /**
      * write operation
      * @param TransactionId
-     * @param Var
+     * @param VarId
      * @param Value
      */
-    public void Write(int TransactionId, int VarId, int Value) throws Exception
+    public boolean Write(int TransactionId, int VarId, int Value) throws Exception
     {
         AliveChecker(TransactionId);
+
     }
 
     /**
@@ -90,7 +102,7 @@ public class TransactionManager {
      * end transaction, print commit or abort
      * @param TransactionId
      */
-    public void End(int TransactionId)
+    public boolean End(int TransactionId)
     {
 
     }
@@ -99,6 +111,16 @@ public class TransactionManager {
      * print the value of the variables on all the site
      */
     public void Dump()
+    {
+
+    }
+
+    public void Fail(int SiteId)
+    {
+
+    }
+
+    public void Recover(int SiteId)
     {
 
     }
@@ -117,14 +139,23 @@ public class TransactionManager {
             Site site = dm.get(siteId);
             if(site.CanGetReadLock(TransactionId,VariableId))
             {
-
+                site.AddReadLock(TransactionId,VariableId,timestamp);
+                return true;
             }
+            return false;
         }
         else
         {
             for(int i=0;i<DataManager.sitenums;i++)
             {
                 Site site = dm.get(i+1);
+                if(site.CanGetReadLock(TransactionId,VariableId))
+                {
+                    site.AddReadLock(TransactionId,VariableId,timestamp);
+                    return true;
+                }
+                else
+                    continue;
             }
         }
         return false;
