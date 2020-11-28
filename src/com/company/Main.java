@@ -12,21 +12,23 @@ public class Main {
 
         String inputfile = args[0];
         boolean status, inList;
+        int idx = 0;
+        String query;
+        status = inList = false;
         try {
             BufferedReader br = new BufferedReader(new FileReader(inputfile));
-            String query;
-            while ((true) {
+            while (true) {
                 String[] res = null;
                 inList = false;
-                if (insWaitlist.isEmpty()) {
-                    if ( (query = br.readLine()) != null)
-                        res = Parser.parse(query);
-                    else
-                        break;
+
+                if (!insWaitlist.isEmpty()) {
+                    query = insWaitlist.get(idx);
+                    res = Parser.parse(query);
+                    inList = true;
                 }
                 else {
-                    res = insWaitlist.get(0);
-                    inList = true;
+                    if ( (query = br.readLine()) != null)
+                        res = Parser.parse(query);
                 }
 
                 if (res[0].equals("begin")) {
@@ -47,17 +49,20 @@ public class Main {
                     status = !tm.End(Integer.parseInt(res[1]));
                 }
 
-                if (status && inList) {
-                    insWaitlist.remove(0);
+                if (status) {
+                    if (inList) {
+                        insWaitlist.remove(idx);
+                    }
+                    idx = 0;
+                } else {
+                    if (!inList) {
+                        insWaitlist.add(res);
+                        idx = 0;
+                    }
+                    else {
+                        idx ++;
+                    }
                 }
-                else if (!status && !inList) {
-                    insWaitlist.add(res);
-                }
-                else {
-
-                }
-
-
             }
         } catch (Exception e) {
             System.out.println("Problem with file");
