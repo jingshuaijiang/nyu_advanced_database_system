@@ -37,9 +37,7 @@ public class Main {
                 } else if (res[0].equals("end")) {
 
                 }
-
             }
-
         } catch (Exception e) {
             System.out.println("Problem with file");
             e.printStackTrace();

@@ -1,4 +1,6 @@
 package com.company;
+import com.sun.jdi.connect.Connector;
+
 import javax.xml.crypto.Data;
 import java.util.*;
 
@@ -113,26 +115,10 @@ public class TransactionManager {
         {
             int siteId = VariableId%10;
             Site site = dm.get(siteId);
-            if(site.locktable[VariableId].size()==0)
+            if(site.CanGetReadLock(TransactionId,VariableId))
             {
-                Lock lock = new Lock();
-                lock.Locktype = 'R';
-                site.locktable[VariableId].add(lock);
-                return true;
-            }
-            else
-            {
-                for(Lock currentlock:site.locktable[VariableId])
-                {
-                    if(currentlock.Locktype=='w')
-                        return false;
-                }
-                Lock lock = new Lock();
-                lock.Locktype = 'R';
-                site.locktable[VariableId].add(lock);
-                return true;
-            }
 
+            }
         }
         else
         {
