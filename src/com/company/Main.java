@@ -27,8 +27,13 @@ public class Main {
                     inList = true;
                 }
                 else {
-                    if ( (query = br.readLine()) != null)
+                    if ( (query = br.readLine()) != null) {
                         res = Parser.parse(query);
+                    }
+                    else{
+                        System.out.print("no more input");
+                        break;
+                    }
                 }
 
                 if (res[0].equals("begin")) {

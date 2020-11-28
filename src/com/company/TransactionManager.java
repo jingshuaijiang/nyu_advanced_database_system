@@ -117,6 +117,14 @@ public class TransactionManager {
      */
     public boolean End(int TransactionId)
     {
+        Transaction t = TransactionMap.get(TransactionId);
+        if (t.aborted) {
+            System.out.print("Abort");
+            TransactionMap.remove(TransactionId);
+        } else {
+            System.out.print("commit");
+
+        }
 
     }
 

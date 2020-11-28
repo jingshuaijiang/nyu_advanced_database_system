@@ -11,6 +11,7 @@ public class Transaction {
     boolean readonly;
 
     HashMap<Integer,Integer> snapshot;
+    HashMap<Integer, Integer> cache;
 
     public Transaction(int start_time, boolean readonly)
     {
