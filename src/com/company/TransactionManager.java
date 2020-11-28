@@ -51,13 +51,19 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
+        TakeSnapshot(TransactionId);
+
+    }
+
+    public void TakeSnapshot(int TransacionId)
+    {
 
     }
 
     /**
      * read operation,
      * @param TransactionId
-     * @param Var
+     * @param VarId
      */
     public boolean Read(int TransactionId, int VarId) throws Exception
     {
@@ -73,10 +79,10 @@ public class TransactionManager {
     /**
      * write operation
      * @param TransactionId
-     * @param Var
+     * @param VarId
      * @param Value
      */
-    public void Write(int TransactionId, int VarId, int Value) throws Exception
+    public boolean Write(int TransactionId, int VarId, int Value) throws Exception
     {
         AliveChecker(TransactionId);
 
@@ -96,7 +102,7 @@ public class TransactionManager {
      * end transaction, print commit or abort
      * @param TransactionId
      */
-    public void End(int TransactionId)
+    public boolean End(int TransactionId)
     {
 
     }
@@ -105,6 +111,16 @@ public class TransactionManager {
      * print the value of the variables on all the site
      */
     public void Dump()
+    {
+
+    }
+
+    public void Fail(int SiteId)
+    {
+
+    }
+
+    public void Recover(int SiteId)
     {
 
     }
