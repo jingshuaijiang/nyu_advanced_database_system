@@ -16,7 +16,7 @@ public class Main {
             String[] res= Parser.parse(query);
             if(res[0].equals("begin"))
             {
-
+                tm.begin();
             }
             else if(res[0].equals("beginro"))
             {
@@ -28,7 +28,7 @@ public class Main {
             }
             else if(res[0].equals("W"))
             {
-
+                tm.Write();
             }
             else if(res[0].equals("recover"))
             {
