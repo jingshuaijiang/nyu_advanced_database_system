@@ -69,6 +69,11 @@ public class Site {
         locktable.clear();
     }
 
+    public void write (int varId, int value) {
+        valueArray[varId] = value;
+
+    }
+
     public void SiteRecover(int timestamp)
     {
         recoverytime = timestamp;

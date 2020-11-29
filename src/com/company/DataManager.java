@@ -28,7 +28,16 @@ public class DataManager {
         return SiteFailure.get(siteId);
     }
 
-
-
+    public void write (int varId, int value) {
+        boolean even = varId % 2 == 0;
+        if (even) {
+            for (Map.entry<Integer,Site> entry : SiteMap.entrySet() ) {
+                Site s = entry.getValue();
+                if (!s.failed) {
+                    s.
+                }
+            }
+        }
+    }
 
 }

@@ -123,7 +123,12 @@ public class TransactionManager {
             TransactionMap.remove(TransactionId);
         } else {
             System.out.print("commit");
-
+            //  Might package to a function
+            for (Map.entry<Integer, Integer> entry : t.cache.entrySet()) {
+                int varId = entry.getKey();
+                int value = entry.getValue();
+                dm.write(varId, value);
+            }
         }
 
     }
