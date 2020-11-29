@@ -1,8 +1,8 @@
 package com.company;
-import com.sun.jdi.connect.Connector;
 
-import javax.xml.crypto.Data;
 import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class TransactionManager {
     HashMap<Integer,Transaction> TransactionMap;
@@ -41,12 +41,14 @@ public class TransactionManager {
     /**
      * begin transaction, initialize a read-only transaction object.
      * @param TransactionId
+     * @return
      */
-    public void beginRO(int TransactionId) throws Exception
+    public boolean beginRO(int TransactionId) throws Exception
     {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
+        return false;
     }
     /**
      * read operation,
@@ -169,7 +171,7 @@ public class TransactionManager {
         {
 
         }
-        return false;
+
     }
 
     /**
@@ -200,21 +202,19 @@ public class TransactionManager {
             System.out.print("Transaction commit");
             //  Might package as a function
             //  write each value in cache to sites
-            for (Map.entry<Integer, Integer> entry : t.cache.entrySet()) {
+            for (Map.Entry<Integer, Integer> entry : t.cache.entrySet()) {
                 int varId = entry.getKey();
                 int value = entry.getValue();
 
-                LinkedList<Integer> sites = t.sites.get(varId);
-                Iterator it = sites.iterator();
-                while (it.hasNext()) {
-                    int siteId = it.next();
-                    dm.write(varId, value, siteId, timestamp);
 
+                LinkedList<Integer> sites = t.sites.get(varId);
+                for (int siteId : sites) {
+                    dm.write(varId, value, siteId, timestamp);
                 }
             }
 
             //  release locks
-            Iterator it = t.accessedsites.iterator();
+            Iterator<Integer> it = t.accessedsites.iterator();
             while (it.hasNext()) {
                 int siteId = it.next();
                 dm.ReleaseSiteLocks(TransactionId, siteId);
@@ -228,7 +228,6 @@ public class TransactionManager {
      */
     public boolean Dump()
     {
-        dm.SiteMap
         return true;
     }
 
@@ -269,7 +268,7 @@ public class TransactionManager {
      */
     public boolean AcquireWriteLock(int TransactionId,int VariableId)
     {
-        if(dm.SiteFailed())
+
     }
 
     /**
