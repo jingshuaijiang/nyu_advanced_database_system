@@ -46,7 +46,7 @@ public class Site {
         return siteId==variableId%10;
     }
 
-    public boolean  CanGetWriteLock(int transactionId,int variableId)
+    public boolean CanGetWriteLock(int transactionId,int variableId)
     {
         if(!locktable.containsKey(variableId))
             return true;
@@ -54,7 +54,14 @@ public class Site {
         {
             if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId!=transactionId)
                 return false;
-            return true;
+            if(!waitingfor_locktable.containsKey(variableId))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
