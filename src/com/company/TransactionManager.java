@@ -47,71 +47,100 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
-        TakeSnapshot(TransactionId);
     }
-
-    public void TakeSnapshot(int TransacionId)
-    {
-        Transaction transaction = TransactionMap.get(TransacionId);
-        for(int i=1;i<=20;i++)
-        {
-            if(i%2==1)
-            {
-                int siteid = i%10+1;
-                if(dm.SiteFailed(siteid))
-                    continue;
-                transaction.snapshot.put(i,dm.get(siteid).GetValue(i));
-            }
-            else
-            {
-                for(int j=1;j<=10;j++)
-                {
-                    if(dm.SiteFailed(j))
-                        continue;
-                    Site site = dm.get(j);
-                    if(site.commitedtimetable.get(i)<transaction.start_time&&dm.GetLastFailTime(j)<site.commitedtimetable.get(i))
-                    {
-                        transaction.snapshot.put(i,site.GetValue(i));
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * read operation,
      * @param TransactionId
      * @param VarId
      */
-    public boolean Read(int TransactionId, int VarId) throws Exception
+    public boolean Read(int TransactionId, int VarId)
     {
-        AliveChecker(TransactionId);
+        if(!AliveChecker(TransactionId))
+            return true;
         Transaction transaction = TransactionMap.get(TransactionId);
+        if(transaction.aborted) return true;
         if(transaction.readonly)
         {
             return RORead(transaction,VarId);
         }
-        if(!AcquireReadLock(TransactionId,VarId))
-            return false;
+        if(transaction.cache.containsKey(VarId))
+        {
+            int value = transaction.cache.get(VarId);
+            System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
+            return true;
+        }
+        //
+        if(VarId%2==1)
+        {
+            int siteId = VarId%10+1;
+            if(AcquireReadLock(TransactionId,VarId,siteId))
+            {
+                if(!transaction.accessedsites.contains(siteId))
+                    transaction.accessedsites.add(siteId);
+                int value = dm.GetSiteVariableValue(siteId,VarId);
+                System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
+                return true;
+            }
+        }
+        //replicated
         else
         {
-
+            for(int i=1;i<=DataManager.sitenums;i++)
+            {
+                if(AcquireReadLock(TransactionId,VarId,i))
+                {
+                    if(!transaction.accessedsites.contains(i))
+                        transaction.accessedsites.add(i);
+                    int value = dm.GetSiteVariableValue(i,VarId);
+                    System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     public boolean RORead(Transaction transaction, int VarId)
     {
-        if(transaction.snapshot.containsKey(VarId))
+        if(VarId%2==1)
         {
-            int value = transaction.snapshot.get(VarId);
-            System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
-            return true;
+            int siteid = VarId%10+1;
+            //go and get history version
+            //if failed then return false and wait.
+            if(dm.SiteFailed(siteid))
+                return false;
+            else
+            {
+                //as long as it's up, we go inside and get the value whose version is before the start_time;
+                int value = dm.RONonRepRead(VarId,transaction.start_time,siteid);
+                System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
+                return true;
+            }
         }
+        //replicated ones
         else
         {
-            return false;
+            for(int i=1;i<=10;i++)
+            {
+                //if site was failed or just recovery, just check next site.
+                if(dm.SiteFailed(i))
+                    continue;
+                Site site = dm.get(i);
+                if(site.justRecovery)
+                    continue;
+                //check next site
+                String value = dm.RORepRead(VarId,transaction.start_time,i);
+                if(value.equals("No"))
+                    continue;
+                else
+                {
+                    System.out.println("X"+String.valueOf(VarId)+":"+value);
+                    return true;
+                }
+            }
         }
+        //all the sites are not suitable for replicated variables.
+        return false;
     }
 
     /**
@@ -120,7 +149,7 @@ public class TransactionManager {
      * @param VarId
      * @param Value
      */
-    public boolean Write(int TransactionId, int VarId, int Value) throws Exception
+    public boolean Write(int TransactionId, int VarId, int Value)
     {
         AliveChecker(TransactionId);
 
@@ -142,39 +171,48 @@ public class TransactionManager {
      */
     public boolean End(int TransactionId)
     {
+
         Transaction t = TransactionMap.get(TransactionId);
+
+        if (t.blocked)  return false;
+
         if (t.aborted) {
-            System.out.print("Abort");
+            System.out.print("Transaction is already abort");
             TransactionMap.remove(TransactionId);
         } else {
-            System.out.print("commit");
-            //  Might package to a function
+            System.out.print("Transaction commit");
+            //  Might package as a function
+            //  write each value in cache to sites
             for (Map.entry<Integer, Integer> entry : t.cache.entrySet()) {
                 int varId = entry.getKey();
                 int value = entry.getValue();
-                dm.write(varId, value, timestamp);
+
+                LinkedList<Integer> sites = t.sites.get(varId);
+                Iterator it = sites.iterator();
+                while (it.hasNext()) {
+                    int siteId = it.next();
+                    dm.write(varId, value, siteId, timestamp);
+
+                }
+            }
+
+            //  release locks
+            Iterator it = t.accessedsites.iterator();
+            while (it.hasNext()) {
+                int siteId = it.next();
+                dm.ReleaseSiteLocks(TransactionId, siteId);
             }
         }
-
+        return true;
     }
 
     /**
      * print the value of the variables on all the site
      */
-    public void Dump()
+    public boolean Dump()
     {
-
-    }
-
-    public void Fail(int SiteId)
-    {
-        dm.Fail(SiteId,timestamp);
-
-    }
-
-    public void Recover(int SiteId)
-    {
-        dm.Recover(SiteId,timestamp);
+        dm.SiteMap
+        return true;
     }
 
     /**
@@ -183,32 +221,18 @@ public class TransactionManager {
      * @param VariableId
      * @return
      */
-    public boolean AcquireReadLock(int TransactionId, int VariableId)
+    public boolean AcquireReadLock(int TransactionId, int VariableId,int siteId)
     {
-        if(VariableId%2==1)
-        {
-            int siteId = VariableId%10;
-            Site site = dm.get(siteId);
-            if(site.CanGetReadLock(TransactionId,VariableId))
-            {
-                site.AddReadLock(TransactionId,VariableId,timestamp);
-                return true;
-            }
+        //none replicated variables
+        if(dm.SiteFailed(siteId))
             return false;
-        }
-        else
+        Site site = dm.get(siteId);
+        if(VariableId%2==0&&site.justRecovery)
+            return false;
+        if(site.CanGetReadLock(TransactionId,VariableId))
         {
-            for(int i=0;i<DataManager.sitenums;i++)
-            {
-                Site site = dm.get(i+1);
-                if(site.CanGetReadLock(TransactionId,VariableId))
-                {
-                    site.AddReadLock(TransactionId,VariableId,timestamp);
-                    return true;
-                }
-                else
-                    continue;
-            }
+            site.AddReadLock(TransactionId,VariableId,timestamp);
+            return true;
         }
         return false;
     }
@@ -232,39 +256,64 @@ public class TransactionManager {
 
     }
 
+    public void AbortTransactions(int siteId)
+    {
+        for(int id:TransactionMap.keySet())
+        {
+            AbortTransaction(id);
+        }
+    }
+
     /**
      * abort the transaction object whose id is transactionid
      * @param TransactionId
      */
     public void AbortTransaction(int TransactionId)
     {
+        Transaction trans = TransactionMap.get(TransactionId);
+        trans.aborted = true;
+        ReleaseLocks(TransactionId,trans.accessedsites);
+    }
 
+    public void ReleaseLocks(int TransactionId,HashSet<Integer> accessedsites)
+    {
+        if(accessedsites.isEmpty())
+            return;
+        for(int site:accessedsites)
+        {
+            dm.ReleaseSiteLocks(TransactionId,site);
+        }
     }
 
 
-    public void TransactionInitChecker(int TransactionId) throws Exception
+    public void TransactionInitChecker(int TransactionId)
     {
         if(TransactionMap.containsKey(TransactionId))
         {
-            throw new Exception("Transaction has already been initilized "+TransactionId);
+            System.out.println("Transaction has already been initilized "+TransactionId);
         }
     }
 
-    public void AliveChecker(int TransactionId) throws Exception
+    public boolean AliveChecker(int TransactionId)
     {
         if(!TransactionMap.containsKey(TransactionId))
         {
-            throw new Exception("Transaction not alive "+TransactionId);
+            System.out.println("Transaction not alive "+TransactionId);
+            return false;
         }
-    }
-
-    public boolean Recover(int SiteId) {
-
         return true;
     }
 
-    public boolean Fail(int SiteId) {
+    public boolean Recover(int SiteId)
+    {
+        dm.Recover(SiteId,timestamp);
+        return true;
+    }
 
+    public boolean Fail(int SiteId)
+    {
+        dm.Fail(SiteId,timestamp);
+        AbortTransactions(SiteId);
         return true;
     }
 
