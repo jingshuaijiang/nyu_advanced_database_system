@@ -37,6 +37,10 @@ public class DataManager {
         return SiteFailure.get(siteId);
     }
 
+    public void write (int varId, int value, int siteId, int timestamp) {
+        Site s = SiteMap.get(siteId);
+        s.write(varId, value, timestamp);
+    }
 
     public int RONonRepRead(int variableId,int timestamp,int siteId)
     {
@@ -117,7 +121,6 @@ public class DataManager {
         Site site = get(siteid);
         site.releaselock(TransactionId);
     }
-
 
 
 }

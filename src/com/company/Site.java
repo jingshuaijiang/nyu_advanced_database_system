@@ -87,7 +87,13 @@ public class Site {
         failed = true;
     }
 
-    public void SiteRecover(int timestamp,int lastfailtime)
+    public void write (int varId, int value, int timestap) {
+        LinkedList<Integer> lst = vartable.get(varId);
+        Variable v = new Variable(timestap, value);
+        lst.add(v);
+    }
+
+    public void SiteRecover(int timestamp, int lastfailtime)
     {
         recoverytime = timestamp;
         justRecovery = true;
