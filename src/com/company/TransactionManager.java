@@ -226,8 +226,20 @@ public class TransactionManager {
     /**
      * print the value of the variables on all the site
      */
-    public boolean Dump()
-    {
+    public boolean Dump() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < dm.sitenums; i++){
+            Site s = dm.SiteMap.get(i+1);
+            sb.append("site " + Integer.toString(i+1) + " - ");
+            ArrayList<Integer> sortedKeys = new ArrayList<Integer>(s.vartable.keySet());
+            Collections.sort(sortedKeys);
+            for (int idx : sortedKeys) {
+                LinkedList<Variable> varLst = (LinkedList<Variable>) s.vartable.get(idx);
+                sb.append("x" + Integer.toString(idx) + ": " + Integer.toString(varLst.getLast().value));
+            }
+            sb.append("\n");
+        }
+        System.out.print(sb.toString());
         return true;
     }
 

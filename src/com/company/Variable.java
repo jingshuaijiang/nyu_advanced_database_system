@@ -9,4 +9,7 @@ public class Variable {
         this.version = version;
         this.value = value;
     }
+
+    public int getValue()   {   return this.value;      }
+    public int getVersion() {   return this.version;    }
 }
