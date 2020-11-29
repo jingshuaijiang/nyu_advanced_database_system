@@ -11,6 +11,8 @@ public class Transaction {
 
     boolean readonly;
 
+    int WaitingForTransactionId;
+
     HashMap<Integer,Integer> snapshot;
 
     HashMap<Integer, Integer> cache;

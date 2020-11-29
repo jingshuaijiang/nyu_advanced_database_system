@@ -58,11 +58,14 @@ public class TransactionManager {
         if(!AliveChecker(TransactionId))
             return true;
         Transaction transaction = TransactionMap.get(TransactionId);
+        if(transaction.blocked) return true;
         if(transaction.aborted) return true;
+        //deal with readonly transaction read
         if(transaction.readonly)
         {
             return RORead(transaction,VarId);
         }
+        //read from previous written value.
         if(transaction.cache.containsKey(VarId))
         {
             int value = transaction.cache.get(VarId);
@@ -95,6 +98,8 @@ public class TransactionManager {
                     System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
                     return true;
                 }
+                else
+                    break;
             }
         }
         return false;
@@ -126,8 +131,6 @@ public class TransactionManager {
                 if(dm.SiteFailed(i))
                     continue;
                 Site site = dm.get(i);
-                if(site.justRecovery)
-                    continue;
                 //check next site
                 String value = dm.RORepRead(VarId,transaction.start_time,i);
                 if(value.equals("No"))
@@ -152,7 +155,21 @@ public class TransactionManager {
     public boolean Write(int TransactionId, int VarId, int Value)
     {
         AliveChecker(TransactionId);
+        Transaction transaction = TransactionMap.get(TransactionId);
+        if(transaction.aborted) return true;
+        if(VarId%2==1)
+        {
+            int siteId = VarId%10+1;
+            if(dm.SiteFailed(siteId))
+                return false;
+            Site site = dm.get(siteId);
+            site.CanGetWriteLock(TransactionId,VarId);
+        }
+        else
+        {
 
+        }
+        return false;
     }
 
     /**
@@ -209,6 +226,13 @@ public class TransactionManager {
             site.AddReadLock(TransactionId,VariableId,timestamp);
             return true;
         }
+        else
+        {
+            Transaction trans = TransactionMap.get(TransactionId);
+            int waitid = site.GetWaitingId(VariableId);
+            trans.WaitingForTransactionId = waitid;
+            trans.blocked = true;
+        }
         return false;
     }
 
@@ -220,7 +244,7 @@ public class TransactionManager {
      */
     public boolean AcquireWriteLock(int TransactionId,int VariableId)
     {
-
+        if(dm.SiteFailed())
     }
 
     /**

@@ -7,6 +7,7 @@ public class Site {
     boolean justRecovery;
     public static final int arraynums = 20;
     HashMap<Integer,List<Lock>> locktable;
+    HashMap<Integer,Lock> waitingfor_locktable;
     HashMap<Integer,List<Variable>> vartable;
     int recoverytime;
     int lastfailtime;
@@ -45,6 +46,18 @@ public class Site {
         return siteId==variableId%10;
     }
 
+    public boolean  CanGetWriteLock(int transactionId,int variableId)
+    {
+        if(!locktable.containsKey(variableId))
+            return true;
+        else
+        {
+            if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId!=transactionId)
+                return false;
+            return true;
+        }
+    }
+
     public boolean CanGetReadLock(int transactionId,int variableId)
     {
         if(!locktable.containsKey(variableId))
@@ -55,6 +68,11 @@ public class Site {
                 return false;
             return true;
         }
+    }
+
+    public int GetWaitingId(int variableId)
+    {
+        return locktable.get(variableId).get(0).transactionId;
     }
 
     public void AddReadLock(int transactionId, int variableId,int timestamp)
