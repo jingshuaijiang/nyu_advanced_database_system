@@ -13,6 +13,7 @@ public class Transaction {
     HashMap<Integer, Integer> snapshot;
     HashMap<Integer, Integer> cache;
 
+    HashMap<Integer, Integer, char> aquireLocks;
 
     public Transaction(int start_time, boolean readonly)
     {

@@ -3,13 +3,11 @@ import java.util.*;
 public class Site {
 
     int siteId;
-    int[] valueArray;
-    int[] committed_valueArray;
     boolean failed;
     boolean justRecovery;
     public static final int arraynums = 20;
     HashMap<Integer,List<Lock>> locktable;
-    HashMap<Integer,Integer> commitedtimetable;
+    HashMap<Integer,List<Variable>> vartable;
     int recoverytime;
     /**
      *
@@ -18,15 +16,19 @@ public class Site {
     public Site(int siteId)
     {
         this.siteId = siteId;
-        valueArray = new int[arraynums];
-        committed_valueArray = new int[arraynums];
         for(int i=0;i<arraynums;i++)
         {
-            valueArray[i] = (i+1)*10;
-            committed_valueArray[i] = (i+1)*10;
+            Variable var = new Variable(10*i,-1);
+            vartable.put(i+1,new LinkedList<>());
+            vartable.get(i+1).add(var);
         }
         locktable = new HashMap<>();
         justRecovery = false;
+    }
+
+    public int GetValue(int variableId)
+    {
+        return vartable.get(variableId).get(0).value;
     }
 
     /**
@@ -67,10 +69,11 @@ public class Site {
     public void Sitefail()
     {
         locktable.clear();
+        failed = true;
     }
 
-    public void write (int varId, int value) {
-        valueArray[varId] = value;
+    public void write (int varId, int value, int timestap) {
+
 
     }
 

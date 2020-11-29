@@ -14,6 +14,7 @@ public class TransactionManager {
     {
         TransactionMap = new HashMap<>();
         dm = new DataManager();
+        timestamp = 0;
     }
     /**
      * get the transaction object whose id is transactionid
@@ -27,10 +28,6 @@ public class TransactionManager {
         return TransactionMap.get(TransactionId);
     }
 
-    public void ProcessCommand()
-    {
-
-    }
     /**
      * begin transaction, initialize a transaction object.
      * @param TransactionId
@@ -39,7 +36,6 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,false);
         TransactionMap.put(TransactionId,transaction);
-
     }
 
     /**
@@ -64,11 +60,21 @@ public class TransactionManager {
                 int siteid = i%10+1;
                 if(dm.SiteFailed(siteid))
                     continue;
-
+                transaction.snapshot.put(i,dm.get(siteid).GetValue(i));
             }
             else
             {
-
+                for(int j=1;j<=10;j++)
+                {
+                    if(dm.SiteFailed(j))
+                        continue;
+                    Site site = dm.get(j);
+                    if(site.commitedtimetable.get(i)<transaction.start_time&&dm.GetLastFailTime(j)<site.commitedtimetable.get(i))
+                    {
+                        transaction.snapshot.put(i,site.GetValue(i));
+                        break;
+                    }
+                }
             }
         }
     }
@@ -81,11 +87,30 @@ public class TransactionManager {
     public boolean Read(int TransactionId, int VarId) throws Exception
     {
         AliveChecker(TransactionId);
+        Transaction transaction = TransactionMap.get(TransactionId);
+        if(transaction.readonly)
+        {
+            return RORead(transaction,VarId);
+        }
         if(!AcquireReadLock(TransactionId,VarId))
             return false;
         else
         {
 
+        }
+    }
+
+    public boolean RORead(Transaction transaction, int VarId)
+    {
+        if(transaction.snapshot.containsKey(VarId))
+        {
+            int value = transaction.snapshot.get(VarId);
+            System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 
@@ -127,7 +152,7 @@ public class TransactionManager {
             for (Map.entry<Integer, Integer> entry : t.cache.entrySet()) {
                 int varId = entry.getKey();
                 int value = entry.getValue();
-                dm.write(varId, value);
+                dm.write(varId, value, timestamp);
             }
         }
 
@@ -143,12 +168,13 @@ public class TransactionManager {
 
     public void Fail(int SiteId)
     {
+        dm.Fail(SiteId,timestamp);
 
     }
 
     public void Recover(int SiteId)
     {
-
+        dm.Recover(SiteId,timestamp);
     }
 
     /**
