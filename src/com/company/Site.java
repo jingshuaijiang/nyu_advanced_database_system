@@ -29,6 +29,11 @@ public class Site {
         justRecovery = false;
     }
 
+    public int GetValue(int variableId)
+    {
+        return committed_valueArray[variableId];
+    }
+
     /**
      *
      * @param variableId
@@ -67,6 +72,7 @@ public class Site {
     public void Sitefail()
     {
         locktable.clear();
+        failed = true;
     }
 
     public void SiteRecover(int timestamp)
