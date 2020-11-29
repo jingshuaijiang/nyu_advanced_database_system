@@ -88,7 +88,7 @@ public class Site {
     }
 
     public void write (int varId, int value, int timestap) {
-        LinkedList<Integer> lst = vartable.get(varId);
+        List<Variable> lst = vartable.get(varId);
         Variable v = new Variable(timestap, value);
         lst.add(v);
     }

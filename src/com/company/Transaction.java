@@ -1,6 +1,7 @@
 package com.company;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 public class Transaction {
 
     boolean blocked;
@@ -14,7 +15,7 @@ public class Transaction {
 
     //  allen's instant variables
     //  varId, siteId
-    HashMap<Integer, List<Integer>> sites;
+    HashMap<Integer, LinkedList<Integer>> sites;
 
     public Transaction(int start_time, boolean readonly)
     {

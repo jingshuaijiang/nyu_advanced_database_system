@@ -21,8 +21,7 @@ public class Main {
                 inList = false;
 
                 if (!insWaitlist.isEmpty()) {
-                    query = insWaitlist.get(idx);
-                    res = Parser.parse(query);
+                    res = insWaitlist.get(idx);
                     inList = true;
                 }
                 else {
@@ -38,7 +37,7 @@ public class Main {
                 if (res[0].equals("begin")) {
                     tm.begin(Integer.parseInt(res[1]));
                 } else if (res[0].equals("beginro")) {
-                    status = !tm.beginRO(Integer.parse(res[1]));
+                    status = !tm.beginRO(Integer.parseInt(res[1]));
                 } else if (res[0].equals("R")) {
                     status = !tm.Read(Integer.parseInt(res[1]), Integer.parseInt(res[2]));
                 } else if (res[0].equals("W")) {
