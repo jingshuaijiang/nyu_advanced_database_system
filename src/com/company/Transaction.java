@@ -9,7 +9,10 @@ public class Transaction {
     boolean aborted;
     boolean readonly;
 
-    HashMap<Integer, Integer> snapshot;
+    int WaitingForTransactionId;
+
+    HashMap<Integer,Integer> snapshot;
+
     HashMap<Integer, Integer> cache;
     HashSet<Integer> accessedsites;
 
