@@ -4,20 +4,20 @@ import java.util.HashSet;
 public class Transaction {
 
     boolean blocked;
-
     int start_time;
-
     boolean aborted;
-
     boolean readonly;
-
+    
     int WaitingForTransactionId;
 
     HashMap<Integer,Integer> snapshot;
 
     HashMap<Integer, Integer> cache;
-
     HashSet<Integer> accessedsites;
+
+    //  allen's instant variables
+    //  varId, siteId
+    HashMap<Integer, List<Integer>> sites;
 
     public Transaction(int start_time, boolean readonly)
     {
@@ -26,5 +26,8 @@ public class Transaction {
         if(readonly)
             snapshot = new HashMap<>();
     }
+
+
+
 
 }

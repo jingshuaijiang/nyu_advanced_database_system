@@ -188,15 +188,39 @@ public class TransactionManager {
      */
     public boolean End(int TransactionId)
     {
+
         Transaction t = TransactionMap.get(TransactionId);
+
+        if (t.blocked)  return false;
+
         if (t.aborted) {
-            System.out.print("Abort");
+            System.out.print("Transaction is already abort");
             TransactionMap.remove(TransactionId);
         } else {
-            System.out.print("commit");
+            System.out.print("Transaction commit");
+            //  Might package as a function
+            //  write each value in cache to sites
+            for (Map.entry<Integer, Integer> entry : t.cache.entrySet()) {
+                int varId = entry.getKey();
+                int value = entry.getValue();
 
+                LinkedList<Integer> sites = t.sites.get(varId);
+                Iterator it = sites.iterator();
+                while (it.hasNext()) {
+                    int siteId = it.next();
+                    dm.write(varId, value, siteId, timestamp);
+
+                }
+            }
+
+            //  release locks
+            Iterator it = t.accessedsites.iterator();
+            while (it.hasNext()) {
+                int siteId = it.next();
+                dm.ReleaseSiteLocks(TransactionId, siteId);
+            }
         }
-
+        return true;
     }
 
     /**
@@ -204,6 +228,7 @@ public class TransactionManager {
      */
     public boolean Dump()
     {
+        dm.SiteMap
         return true;
     }
 
