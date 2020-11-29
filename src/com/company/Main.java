@@ -9,7 +9,6 @@ public class Main {
         TransactionManager tm = new TransactionManager();
 
         List<String[]> insWaitlist = new LinkedList<>();
-
         String inputfile = args[0];
         boolean status, inList;
         int idx = 0;

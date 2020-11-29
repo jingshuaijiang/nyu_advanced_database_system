@@ -9,6 +9,7 @@ public class Site {
     HashMap<Integer,List<Lock>> locktable;
     HashMap<Integer,List<Variable>> vartable;
     int recoverytime;
+    int lastfailtime;
     /**
      *
      * @param siteId
@@ -31,6 +32,7 @@ public class Site {
         return vartable.get(variableId).get(0).value;
     }
 
+
     /**
      *
      * @param variableId
@@ -49,7 +51,7 @@ public class Site {
             return true;
         else
         {
-            if(locktable.get(variableId).get(0).Locktype=='w'&&locktable.get(variableId).get(0).transactionId!=transactionId)
+            if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId!=transactionId)
                 return false;
             return true;
         }
@@ -57,10 +59,23 @@ public class Site {
 
     public void AddReadLock(int transactionId, int variableId,int timestamp)
     {
-        Lock lock = new Lock('R',timestamp,transactionId);
         if(!locktable.containsKey(variableId))
+        {
             locktable.put(variableId,new ArrayList<>());
-        locktable.get(variableId).add(lock);
+            Lock lock = new Lock('R',timestamp,transactionId);
+            locktable.get(variableId).add(0,lock);
+            return;
+        }
+        if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId==transactionId)
+            return;
+        List<Lock> locks = locktable.get(variableId);
+        for(int i=0;i<locks.size();i++)
+        {
+            if(locks.get(i).transactionId==transactionId)
+                return;
+        }
+        Lock lock = new Lock('R',timestamp,transactionId);
+        locktable.get(variableId).add(0,lock);
     }
 
     /**
@@ -72,10 +87,24 @@ public class Site {
         failed = true;
     }
 
-    public void SiteRecover(int timestamp)
+    public void SiteRecover(int timestamp,int lastfailtime)
     {
         recoverytime = timestamp;
         justRecovery = true;
         failed = false;
+        lastfailtime = lastfailtime;
+    }
+
+    public void releaselock(int TransactionId)
+    {
+        for(int var:locktable.keySet())
+        {
+            List<Lock> locks = locktable.get(var);
+            for(int i=0;i<locks.size();i++)
+            {
+                if(locks.get(i).transactionId==TransactionId)
+                    locks.remove(locks.get(i));
+            }
+        }
     }
 }
