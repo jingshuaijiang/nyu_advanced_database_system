@@ -46,24 +46,60 @@ public class Site {
         return siteId==variableId%10;
     }
 
+    public void ClearWaitLock(int TransactionId,int VarId)
+    {
+        if(waitingfor_locktable.containsKey(VarId)&&waitingfor_locktable.get(VarId).transactionId==TransactionId)
+            waitingfor_locktable.remove(VarId);
+    }
+
+    public void AddWaitLock(int transactionId,int VarId,int timestamp)
+    {
+        if(!waitingfor_locktable.containsKey(VarId))
+        {
+            Lock lock = new Lock('W',timestamp,transactionId);
+            waitingfor_locktable.put(1,lock);
+        }
+    }
+
+    public void AddWriteLock(int transactionId,int variableId,int timestamp)
+    {
+        if(!locktable.containsKey(variableId))
+        {
+            locktable.put(variableId,new ArrayList<>());
+            Lock lock = new Lock('W',timestamp,transactionId);
+            locktable.get(variableId).add(0,lock);
+            return;
+        }
+        if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId==transactionId)
+            return;
+        Lock lock = new Lock('W',timestamp,transactionId);
+        locktable.get(variableId).add(0,lock);
+        return;
+
+    }
+
     public boolean CanGetWriteLock(int transactionId,int variableId)
     {
         if(!locktable.containsKey(variableId))
             return true;
         else
         {
-            if(locktable.get(variableId).get(0).Locktype=='W'&&locktable.get(variableId).get(0).transactionId!=transactionId)
+            if(locktable.get(variableId).get(0).transactionId!=transactionId)
                 return false;
-            if(!waitingfor_locktable.containsKey(variableId))
+            if(locktable.get(variableId).get(0).Locktype=='W')
             {
                 return true;
             }
             else
             {
+                if(!waitingfor_locktable.containsKey(variableId))
+                    return true;
                 return false;
             }
         }
     }
+
+
 
     public boolean CanGetReadLock(int transactionId,int variableId)
     {

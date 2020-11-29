@@ -159,19 +159,75 @@ public class TransactionManager {
         AliveChecker(TransactionId);
         Transaction transaction = TransactionMap.get(TransactionId);
         if(transaction.aborted) return true;
+        if(transaction.blocked) return true;
         if(VarId%2==1)
         {
             int siteId = VarId%10+1;
             if(dm.SiteFailed(siteId))
                 return false;
             Site site = dm.get(siteId);
-            site.CanGetWriteLock(TransactionId,VarId);
+            if(site.CanGetWriteLock(TransactionId,VarId))
+            {
+                site.AddWriteLock(TransactionId,VarId,timestamp);
+                site.ClearWaitLock(TransactionId,VarId);
+                transaction.accessedsites.add(siteId);
+                transaction.cache.put(VarId,Value);
+                LinkedList<Integer> list = new LinkedList<>();
+                list.add(siteId);
+                transaction.sites.put(VarId,list);
+                return true;
+            }
+            else
+            {
+                site.AddWaitLock(TransactionId,VarId,timestamp);
+                int waitid = site.GetWaitingId(VarId);
+                transaction.WaitingForTransactionId = waitid;
+                transaction.blocked = true;
+                return false;
+            }
         }
         else
         {
-
+            LinkedList<Integer> ids = new LinkedList<>();
+            boolean should_block = false;
+            int waitid = -1;
+            for(int j=1;j<=10;j++)
+            {
+                if(dm.SiteFailed(j))
+                    continue;
+                Site site = dm.get(j);
+                if(!site.CanGetWriteLock(TransactionId,VarId))
+                {
+                    should_block = true;
+                    waitid = site.GetWaitingId(VarId);
+                }
+                ids.add(j);
+            }
+            if(should_block)
+            {
+                for(int id:ids)
+                {
+                    Site site = dm.get(id);
+                    site.AddWaitLock(TransactionId,VarId,timestamp);
+                }
+                transaction.WaitingForTransactionId = waitid;
+                transaction.blocked = true;
+                return false;
+            }
+            else
+            {
+                for(int id:ids)
+                {
+                    Site site = dm.get(id);
+                    site.AddWriteLock(TransactionId,VarId,timestamp);
+                    transaction.accessedsites.add(id);
+                    site.ClearWaitLock(TransactionId,VarId);
+                }
+                transaction.cache.put(VarId,Value);
+                transaction.sites.put(VarId,ids);
+                return true;
+            }
         }
-        return true;
     }
 
     /**
