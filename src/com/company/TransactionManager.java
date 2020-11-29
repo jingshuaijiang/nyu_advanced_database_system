@@ -171,7 +171,7 @@ public class TransactionManager {
         {
 
         }
-
+        return true;
     }
 
     /**
@@ -268,7 +268,7 @@ public class TransactionManager {
      */
     public boolean AcquireWriteLock(int TransactionId,int VariableId)
     {
-
+        return true;
     }
 
     /**
