@@ -1,0 +1,10 @@
+// Test 11
+// T2 should abort because it is waiting on R(T1,x2) but is younger so
+// T2 cannot wait for T1.
+// Note there is no end(T2) because it aborts
+begin(T1)
+begin(T2)
+R(T1,x2)
+R(T2,x2)
+W(T2,x2,10)
+end(T1)

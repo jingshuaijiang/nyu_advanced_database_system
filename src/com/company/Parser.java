@@ -17,9 +17,10 @@ public class Parser {
             int eidx = query.indexOf(")");
             query = query.substring(sidx, eidx).trim();
             String[] paralst = query.split(",");
-            for (int i = 0; i < paralst.length-1; ++i) {
-                res[i+1] = paralst[i].substring(1);
+            for (int i = 0; i < paralst.length; ++i) {
+                res[i+1] = paralst[i].trim().substring(1);
             }
+
         }
         else if (query.indexOf("W") != -1) {
             res[0] = "W";
@@ -28,9 +29,9 @@ public class Parser {
             query = query.substring(sidx, eidx).trim();
             String[] paralst = query.split(",");
             for (int i = 0; i < paralst.length-1; ++i) {
-                res[i+1] = paralst[i].substring(1);
+                res[i+1] = paralst[i].trim().substring(1);
             }
-            res[3] = paralst[2];
+            res[3] = paralst[2].trim();
         }
         else if (query.indexOf("end") != -1) {
             res[0] = "end";

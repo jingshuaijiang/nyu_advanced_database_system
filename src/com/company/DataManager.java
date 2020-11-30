@@ -11,6 +11,8 @@ public class DataManager {
     public DataManager()
     {
         SiteMap = new HashMap<>();
+        SiteFailure = new HashMap<>();
+        SiteFailTime = new HashMap<>();
         for(int i=0;i<sitenums;i++)
         {
             Site site = new Site(i+1);

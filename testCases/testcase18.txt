@@ -1,0 +1,41 @@
+// Test script #1
+// Purpose: test transactions and the wait-die protocol in the absence of failures
+// I'll test:
+// 1. Regular lock / unlock mechanisms and read / write mechanims
+// 2. An older transaction waiting for a younger transaction to finish
+// 3. A younger transaction aborted because of the wait-die (cannot wait for conflicting older transaction)
+// 4. MVCC operations
+
+// items 1,2,3
+begin(T1)
+R(T1,x2)	// T1 reads x2 from site 1
+R(T1,x1)	// T1 reads x1 from site 2
+W(T1, x2, 10)	// T1 writes x2 to all sites
+R(T1, x2)	// make sure a transaction reads the last value it has written if it did the last write on a data item
+dump()
+begin(T2)
+begin(T3)
+W(T3, x4, 100)	// T3 writes x4 to all sites
+W(T3, x5, 100)	// T3 writes x5 to site 6
+R(T1, x4)	// should wait for T3 to finish
+R(T2, x5)	// should wait for T3 to finish
+end(T3)
+dump()
+R(T2, x4)	// T2 reads x4 from site 1
+R(T2, x2)	// T2 aborts - cannot wait for older transaction T1
+end(T1)
+dump()
+
+// item 4
+begin(T4)
+beginRO(T5)
+W(T4, x5, 20)	// T4 writes x5 to site 6
+R(T5, x5)	// T5 reads x5 from site 6 - value should be 100
+end(T4)
+R(T5, x5)	// T5 reads x5 from site 6 - should still read 100
+beginRO(T6)
+R(T6, x5)	// T6 reads x5 from site 6 but should read 20
+end(T5)
+dump()
+end(T6)
+dump()

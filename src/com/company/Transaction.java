@@ -26,6 +26,10 @@ public class Transaction {
         this.readonly = readonly;
         if(readonly)
             snapshot = new HashMap<>();
+        accessedsites = new HashSet<>();
+        cache = new HashMap<>();
+        sites = new HashMap<>();
+        this.WaitingForTransactionId = -1;
     }
 
 
