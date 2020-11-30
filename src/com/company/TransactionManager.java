@@ -1,5 +1,6 @@
 package com.company;
 
+import javax.sound.midi.SysexMessage;
 import java.util.*;
 import java.util.Map;
 import java.util.HashMap;
@@ -32,10 +33,11 @@ public class TransactionManager {
      * begin transaction, initialize a transaction object.
      * @param TransactionId
      */
-    public void begin(int TransactionId) throws Exception {
+    public boolean begin(int TransactionId) throws Exception {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,false);
         TransactionMap.put(TransactionId,transaction);
+        return true;
     }
 
     /**
@@ -48,7 +50,7 @@ public class TransactionManager {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
-        return false;
+        return true;
     }
     /**
      * read operation,
@@ -60,7 +62,7 @@ public class TransactionManager {
         if(!AliveChecker(TransactionId))
             return true;
         Transaction transaction = TransactionMap.get(TransactionId);
-        if(transaction.blocked) return true;
+        if(transaction.blocked) return false;
         if(transaction.aborted) return true;
         //deal with readonly transaction read
         if(transaction.readonly)
@@ -156,10 +158,11 @@ public class TransactionManager {
      */
     public boolean Write(int TransactionId, int VarId, int Value)
     {
-        AliveChecker(TransactionId);
+        if(!AliveChecker(TransactionId))
+            return true;
         Transaction transaction = TransactionMap.get(TransactionId);
         if(transaction.aborted) return true;
-        if(transaction.blocked) return true;
+        if(transaction.blocked) return false;
         if(VarId%2==1)
         {
             int siteId = VarId%10+1;
@@ -180,7 +183,7 @@ public class TransactionManager {
             else
             {
                 site.AddWaitLock(TransactionId,VarId,timestamp);
-                int waitid = site.GetWaitingId(VarId);
+                int waitid = site.GetWaitingId(VarId,TransactionId);
                 transaction.WaitingForTransactionId = waitid;
                 transaction.blocked = true;
                 return false;
@@ -199,7 +202,7 @@ public class TransactionManager {
                 if(!site.CanGetWriteLock(TransactionId,VarId))
                 {
                     should_block = true;
-                    waitid = site.GetWaitingId(VarId);
+                    waitid = site.GetWaitingId(VarId,TransactionId);
                 }
                 ids.add(j);
             }
@@ -275,6 +278,8 @@ public class TransactionManager {
                 int siteId = it.next();
                 dm.ReleaseSiteLocks(TransactionId, siteId);
             }
+            UnblockTransactions(TransactionId);
+            TransactionMap.remove(TransactionId);
         }
         return true;
     }
@@ -291,7 +296,9 @@ public class TransactionManager {
             Collections.sort(sortedKeys);
             for (int idx : sortedKeys) {
                 LinkedList<Variable> varLst = (LinkedList<Variable>) s.vartable.get(idx);
-                sb.append("x" + Integer.toString(idx) + ": " + Integer.toString(varLst.getLast().value));
+                //  clean output
+                if (varLst.getLast().version == -1)  continue;
+                sb.append("x" + Integer.toString(idx) + ": " + Integer.toString(varLst.getLast().value) + " ");
             }
             sb.append("\n");
         }
@@ -311,8 +318,13 @@ public class TransactionManager {
         if(dm.SiteFailed(siteId))
             return false;
         Site site = dm.get(siteId);
-        if(VariableId%2==0&&site.justRecovery)
-            return false;
+        if( VariableId%2==0 && site.justRecovery )
+        {
+            System.out.println("last justRecovery");
+            System.out.println("siteID: " + siteId);
+            if(site.GetVarLastCommitedTime(VariableId)<dm.GetLastFailTime(siteId))
+                return false;
+        }
         if(site.CanGetReadLock(TransactionId,VariableId))
         {
             site.AddReadLock(TransactionId,VariableId,timestamp);
@@ -321,7 +333,7 @@ public class TransactionManager {
         else
         {
             Transaction trans = TransactionMap.get(TransactionId);
-            int waitid = site.GetWaitingId(VariableId);
+            int waitid = site.GetWaitingId(VariableId,TransactionId);
             trans.WaitingForTransactionId = waitid;
             trans.blocked = true;
         }
@@ -364,9 +376,12 @@ public class TransactionManager {
             Transaction t = TransactionMap.get(tid);
             while (t.WaitingForTransactionId != -1) {
                 if (lst.contains(t.WaitingForTransactionId)) {
-                    System.out.print("deadlock detected");
+                    System.out.println("deadlock detected");
+                    // should remove elements before t.WaitingForTransactionId
                     int youngestId = findYoungest(lst);
+                    System.out.println("Transaction #" + youngestId + " aborted");
                     AbortTransaction(youngestId);
+                    TransactionMap.remove(youngestId);
                     return;
                 }
 
@@ -384,10 +399,10 @@ public class TransactionManager {
      * */
     public int findYoungest (LinkedList<Integer> lst) {
         int youngestId = -1;
-        int youngestTime = Integer.MAX_VALUE;
+        int youngestTime = Integer.MIN_VALUE;
         for (int id : lst) {
             Transaction t = TransactionMap.get(id);
-            if (t.start_time < youngestTime) {
+            if (t.start_time > youngestTime) {
                 youngestId = id;
                 youngestTime = t.start_time;
             }
@@ -415,6 +430,7 @@ public class TransactionManager {
         Transaction trans = TransactionMap.get(TransactionId);
         trans.aborted = true;
         ReleaseLocks(TransactionId,trans.accessedsites);
+        UnblockTransactions(TransactionId);
     }
 
     public void ReleaseLocks(int TransactionId,HashSet<Integer> accessedsites)
@@ -424,6 +440,18 @@ public class TransactionManager {
         for(int site:accessedsites)
         {
             dm.ReleaseSiteLocks(TransactionId,site);
+        }
+    }
+
+    public void UnblockTransactions(int TransactionId)
+    {
+        for(Transaction trans:TransactionMap.values())
+        {
+            if(trans.WaitingForTransactionId==TransactionId&&trans.blocked) {
+                trans.blocked = false;
+                // allen's debug
+                trans.WaitingForTransactionId = -1;
+            }
         }
     }
 

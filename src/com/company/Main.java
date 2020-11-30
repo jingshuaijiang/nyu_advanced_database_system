@@ -7,9 +7,8 @@ public class Main {
 
     public static void main(String[] args) {
         TransactionManager tm = new TransactionManager();
-
         List<String[]> insWaitlist = new LinkedList<>();
-        String inputfile = args[0];
+        String inputfile = "C:\\Users\\jingshuai jiang\\Desktop\\NYU\\advanced_database\\project\\nyu_advanced_database_system\\testCases\\testcase4.txt";
         boolean status, inList;
         int idx = 0;
         String query;
@@ -19,39 +18,47 @@ public class Main {
             while (true) {
                 String[] res = null;
                 inList = false;
-
-                if (!insWaitlist.isEmpty()) {
+                if (!insWaitlist.isEmpty() && idx < insWaitlist.size()) {
+                    System.out.println("idx:" + idx);
                     res = insWaitlist.get(idx);
+                    System.out.println("inlst:");
+                    for (String s : res)    System.out.print(s + ' ');
+                    System.out.println();
                     inList = true;
                 }
                 else {
                     if ( (query = br.readLine()) != null) {
+                        System.out.println("query: "+query);
                         res = Parser.parse(query);
+                        System.out.println("text:");
+                        for (String s : res)    System.out.print(s + ' ');
+                        System.out.println();
                     }
                     else{
                         System.out.print("no more input");
                         break;
                     }
                 }
-
                 if (res[0].equals("begin")) {
-                    tm.begin(Integer.parseInt(res[1]));
-                } else if (res[0].equals("beginro")) {
-                    status = !tm.beginRO(Integer.parseInt(res[1]));
+                    status = tm.begin(Integer.parseInt(res[1]));
+                } else if (res[0].equals("beginRO")) {
+                    status = tm.beginRO(Integer.parseInt(res[1]));
                 } else if (res[0].equals("R")) {
-                    status = !tm.Read(Integer.parseInt(res[1]), Integer.parseInt(res[2]));
+                    status = tm.Read(Integer.parseInt(res[1]), Integer.parseInt(res[2]));
                 } else if (res[0].equals("W")) {
-                    status = !tm.Write(Integer.parseInt(res[1]), Integer.parseInt(res[2]), Integer.parseInt(res[3]));
+                    status = tm.Write(Integer.parseInt(res[1]), Integer.parseInt(res[2]), Integer.parseInt(res[3]));
                 } else if (res[0].equals("recover")) {
-                    status = !tm.Recover(Integer.parseInt(res[1]));
+                    status = tm.Recover(Integer.parseInt(res[1]));
                 } else if (res[0].equals("fail")) {
-                    status = !tm.Fail(Integer.parseInt(res[1]));
+                    status = tm.Fail(Integer.parseInt(res[1]));
                 } else if (res[0].equals("dump")) {
-                    status = !tm.Dump();
+                    status = tm.Dump();
                 } else if (res[0].equals("end")) {
-                    status = !tm.End(Integer.parseInt(res[1]));
+                    status = tm.End(Integer.parseInt(res[1]));
                 }
 
+                System.out.println("status:" + status);
+                System.out.println();
                 if (status) {
                     if (inList) {
                         insWaitlist.remove(idx);
@@ -66,6 +73,8 @@ public class Main {
                         idx ++;
                     }
                 }
+                tm.timestamp++;
+                if (tm.timestamp % 1 == 0)  tm.DetectDeadLock();
             }
         } catch (Exception e) {
             System.out.println("Problem with file");

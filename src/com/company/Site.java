@@ -18,11 +18,25 @@ public class Site {
     public Site(int siteId)
     {
         this.siteId = siteId;
-        for(int i=0;i<arraynums;i++)
+        vartable = new HashMap<>();
+        for(int i=1;i<=arraynums;i++)
         {
-            Variable var = new Variable(10*i,-1);
-            vartable.put(i+1,new LinkedList<>());
-            vartable.get(i+1).add(var);
+
+            if(i%2==0)
+            {
+                Variable var = new Variable(-1,10*i);
+                vartable.put(i,new LinkedList<>());
+                vartable.get(i).add(var);
+            }
+            else
+            {
+                if(i%10+1==siteId)
+                {
+                    Variable var = new Variable(-1,10*i);
+                    vartable.put(i,new LinkedList<>());
+                    vartable.get(i).add(var);
+                }
+            }
         }
         locktable = new HashMap<>();
         justRecovery = false;
@@ -31,7 +45,8 @@ public class Site {
 
     public int GetValue(int variableId)
     {
-        return vartable.get(variableId).get(0).value;
+        int size = vartable.get(variableId).size();
+        return vartable.get(variableId).get(size-1).value;
     }
 
 
@@ -47,6 +62,13 @@ public class Site {
         return siteId==variableId%10;
     }
 
+    public int GetVarLastCommitedTime(int variableId)
+    {
+        List<Variable> history = vartable.get(variableId);
+        int size = vartable.get(variableId).size();
+        return vartable.get(variableId).get(size-1).version;
+    }
+
     public void ClearWaitLock(int TransactionId,int VarId)
     {
         if(waitingfor_locktable.containsKey(VarId)&&waitingfor_locktable.get(VarId).transactionId==TransactionId)
@@ -58,13 +80,13 @@ public class Site {
         if(!waitingfor_locktable.containsKey(VarId))
         {
             Lock lock = new Lock('W',timestamp,transactionId);
-            waitingfor_locktable.put(1,lock);
+            waitingfor_locktable.put(VarId,lock);
         }
     }
 
     public void AddWriteLock(int transactionId,int variableId,int timestamp)
     {
-        if(!locktable.containsKey(variableId))
+        if(!locktable.containsKey(variableId)||locktable.get(variableId).size()==0)
         {
             locktable.put(variableId,new ArrayList<>());
             Lock lock = new Lock('W',timestamp,transactionId);
@@ -81,19 +103,36 @@ public class Site {
 
     public boolean CanGetWriteLock(int transactionId,int variableId)
     {
-        if(!locktable.containsKey(variableId))
+        if(!locktable.containsKey(variableId)||locktable.get(variableId).size()==0)
             return true;
         else
         {
-            if(locktable.get(variableId).get(0).transactionId!=transactionId)
-                return false;
+//            if(locktable.get(variableId).get(0).transactionId!=transactionId)
+//                return false;
+//            if(locktable.get(variableId).get(0).Locktype=='W')
+//            {
+//                return true;
+//            }
+//            else
+//            {
+//                if(!waitingfor_locktable.containsKey(variableId))
+//                    return true;
+//                return false;
+//            }
             if(locktable.get(variableId).get(0).Locktype=='W')
             {
+                if(locktable.get(variableId).get(0).transactionId!=transactionId)
+                    return false;
                 return true;
             }
-            else
-            {
-                if(!waitingfor_locktable.containsKey(variableId))
+            else{
+                List<Lock> locks = locktable.get(variableId);
+                for(int i=0;i<locks.size();i++)
+                {
+                    if(locks.get(i).transactionId!=transactionId)
+                        return false;
+                }
+                if(!waitingfor_locktable.containsKey(variableId)||waitingfor_locktable.get(variableId).transactionId==transactionId)
                     return true;
                 return false;
             }
@@ -104,7 +143,7 @@ public class Site {
 
     public boolean CanGetReadLock(int transactionId,int variableId)
     {
-        if(!locktable.containsKey(variableId))
+        if(!locktable.containsKey(variableId)||locktable.get(variableId).size()==0)
             return true;
         else
         {
@@ -114,14 +153,22 @@ public class Site {
         }
     }
 
-    public int GetWaitingId(int variableId)
+    public int GetWaitingId(int variableId,int transactionId)
     {
-        return locktable.get(variableId).get(0).transactionId;
+        List<Lock> lists = locktable.get(variableId);
+        for(int i=0;i<lists.size();i++)
+        {
+            if(lists.get(i).transactionId!=transactionId)
+                return lists.get(i).transactionId;
+        }
+        if(waitingfor_locktable.containsKey(variableId))
+            return waitingfor_locktable.get(variableId).transactionId;
+        return -1;
     }
 
     public void AddReadLock(int transactionId, int variableId,int timestamp)
     {
-        if(!locktable.containsKey(variableId))
+        if(!locktable.containsKey(variableId)||locktable.get(variableId).size()==0)
         {
             locktable.put(variableId,new ArrayList<>());
             Lock lock = new Lock('R',timestamp,transactionId);
@@ -172,7 +219,7 @@ public class Site {
             for(int i=0;i<locks.size();i++)
             {
                 if(locks.get(i).transactionId==TransactionId)
-                    locks.remove(locks.get(i));
+                    locks.remove(locks.get(i--));
             }
         }
     }
