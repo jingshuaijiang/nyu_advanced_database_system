@@ -26,6 +26,7 @@ public class Site {
         }
         locktable = new HashMap<>();
         justRecovery = false;
+        waitingfor_locktable = new HashMap<>();
     }
 
     public int GetValue(int variableId)
@@ -145,6 +146,7 @@ public class Site {
     public void Sitefail()
     {
         locktable.clear();
+        waitingfor_locktable.clear();
         failed = true;
     }
 
