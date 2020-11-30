@@ -339,7 +339,9 @@ public class TransactionManager {
     {
         for(int id:TransactionMap.keySet())
         {
-            AbortTransaction(id);
+            Transaction trans = TransactionMap.get(id);
+            if(trans.accessedsites.contains(siteId))
+                AbortTransaction(id);
         }
     }
 
