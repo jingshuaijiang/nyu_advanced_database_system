@@ -28,22 +28,50 @@ public class DataManager {
         return SiteMap.get(siteId);
     }
 
+    /**
+     * get the last failure time of some site
+     * @param siteId
+     * @return
+     * @author jingshuai jiang
+     */
+
     public int GetLastFailTime(int siteId)
     {
         int size = SiteFailTime.get(siteId).size();
         return SiteFailTime.get(siteId).get(size-1);
     }
 
+    /**
+     * check the site's status
+     * @param siteId
+     * @return
+     * @author jingshuai jiang
+     */
     public boolean SiteFailed(int siteId)
     {
         return SiteFailure.get(siteId);
     }
 
+    /**
+     *
+     * @param varId
+     * @param value
+     * @param siteId
+     * @param timestamp
+     */
     public void write (int varId, int value, int siteId, int timestamp) {
         Site s = SiteMap.get(siteId);
         s.write(varId, value, timestamp);
     }
 
+    /**
+     *
+     * @param variableId
+     * @param timestamp
+     * @param siteId
+     * @return
+     * @author jingshuai jiang
+     */
     public int RONonRepRead(int variableId,int timestamp,int siteId)
     {
         Site site = get(siteId);
@@ -58,6 +86,14 @@ public class DataManager {
         return -1;
     }
 
+    /**
+     * Read for replicated variables of RO transactions
+     * @param variableId
+     * @param timestamp
+     * @param siteId
+     * @return
+     * @author jingshuai jiang
+     */
     public String RORepRead(int variableId,int timestamp,int siteId)
     {
         Site site = get(siteId);
@@ -78,6 +114,15 @@ public class DataManager {
         return "No";
     }
 
+    /**
+     * check if site is up during two time range
+     * @param lastcommitedtimebeforestart
+     * @param starttime
+     * @param siteId
+     * @return
+     * @author jingshuai jiang
+     */
+
     public boolean AlwaysUp(int lastcommitedtimebeforestart, int starttime,int siteId)
     {
         List<Integer> failedtime = SiteFailTime.get(siteId);
@@ -90,6 +135,12 @@ public class DataManager {
         return true;
     }
 
+    /**
+     * fail some site
+     * @param SiteId
+     * @param timestamp
+     * @author jingshuai jiang
+     */
     public void Fail(int SiteId,int timestamp) {
         Site site = get(SiteId);
         site.Sitefail();
@@ -97,6 +148,12 @@ public class DataManager {
         SiteFailTime.get(SiteId).add(timestamp);
     }
 
+    /**
+     * recover some site
+     * @param SiteId
+     * @param timestamp
+     * @author jingshuai jiang
+     */
     public void Recover(int SiteId, int timestamp)
     {
         Site site = get(SiteId);

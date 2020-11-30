@@ -32,8 +32,11 @@ public class TransactionManager {
     /**
      * begin transaction, initialize a transaction object.
      * @param TransactionId
+     * @return boolean
+     * @author jingshuai jiang
      */
-    public boolean begin(int TransactionId) throws Exception {
+    public boolean begin(int TransactionId)
+    {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,false);
         TransactionMap.put(TransactionId,transaction);
@@ -43,19 +46,23 @@ public class TransactionManager {
     /**
      * begin transaction, initialize a read-only transaction object.
      * @param TransactionId
-     * @return
+     * @return boolean
+     * @author jingshuai jiang
      */
-    public boolean beginRO(int TransactionId) throws Exception
+    public boolean beginRO(int TransactionId)
     {
         TransactionInitChecker(TransactionId);
         Transaction transaction = new Transaction(this.timestamp,true);
         TransactionMap.put(TransactionId,transaction);
         return true;
     }
+
     /**
-     * read operation,
+     * read operation
      * @param TransactionId
      * @param VarId
+     * @return boolean
+     * @author jingshuai jiang
      */
     public boolean Read(int TransactionId, int VarId)
     {
@@ -76,10 +83,12 @@ public class TransactionManager {
             System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
             return true;
         }
-        //
+        //noreplicated variables
         if(VarId%2==1)
         {
+            //get the sitenumber
             int siteId = VarId%10+1;
+            //if we can get the read lock for this variable
             if(AcquireReadLock(TransactionId,VarId,siteId))
             {
                 if(!transaction.accessedsites.contains(siteId))
@@ -89,7 +98,7 @@ public class TransactionManager {
                 return true;
             }
         }
-        //replicated
+        //replicated variables
         else
         {
             for(int i=1;i<=DataManager.sitenums;i++)
@@ -102,12 +111,18 @@ public class TransactionManager {
                     System.out.println("X"+String.valueOf(VarId)+":"+String.valueOf(value));
                     return true;
                 }
-                else
-                    break;
             }
         }
         return false;
     }
+
+    /**
+     * read operation for readonly transactions
+     * @param transaction
+     * @param VarId
+     * @return
+     * @author jingshuai jiang
+     */
 
     public boolean RORead(Transaction transaction, int VarId)
     {
@@ -155,6 +170,7 @@ public class TransactionManager {
      * @param TransactionId
      * @param VarId
      * @param Value
+     * @author jingshuai jiang
      */
     public boolean Write(int TransactionId, int VarId, int Value)
     {
@@ -236,6 +252,7 @@ public class TransactionManager {
     /**
      * block transaction with id TransactionId
      * @param TransactionId
+     * @author jingshuai jiang
      */
     public void BlockTransaction(int TransactionId)
     {
@@ -311,6 +328,7 @@ public class TransactionManager {
      * @param TransactionId
      * @param VariableId
      * @return
+     * @author jingshuai jiang
      */
     public boolean AcquireReadLock(int TransactionId, int VariableId,int siteId)
     {
@@ -318,10 +336,8 @@ public class TransactionManager {
         if(dm.SiteFailed(siteId))
             return false;
         Site site = dm.get(siteId);
-        if( VariableId%2==0 && site.justRecovery )
+        if(VariableId%2==0 && site.justRecovery )
         {
-            System.out.println("last justRecovery");
-            System.out.println("siteID: " + siteId);
             if(site.GetVarLastCommitedTime(VariableId)<dm.GetLastFailTime(siteId))
                 return false;
         }
@@ -340,16 +356,6 @@ public class TransactionManager {
         return false;
     }
 
-    /**
-     * acquire write lock
-     * @param TransactionId
-     * @param VariableId
-     * @return
-     */
-    public boolean AcquireWriteLock(int TransactionId,int VariableId)
-    {
-        return true;
-    }
 
     /**
      * Detect deadlock
@@ -410,7 +416,12 @@ public class TransactionManager {
         return youngestId;
     }
 
-
+    /**
+     * abort those transactions because their lock
+     * information lost on particular site failure
+     * @param siteId
+     * @author jingshuai jiang
+     */
     public void AbortTransactions(int siteId)
     {
         for(int id:TransactionMap.keySet())
@@ -424,6 +435,7 @@ public class TransactionManager {
     /**
      * abort the transaction object whose id is transactionid
      * @param TransactionId
+     * @author jingshuai jiang
      */
     public void AbortTransaction(int TransactionId)
     {
@@ -432,6 +444,13 @@ public class TransactionManager {
         ReleaseLocks(TransactionId,trans.accessedsites);
         UnblockTransactions(TransactionId);
     }
+
+    /**
+     * Release the locks hold by this transaction
+     * @param TransactionId
+     * @param accessedsites
+     * @author jingshuai jiang
+     */
 
     public void ReleaseLocks(int TransactionId,HashSet<Integer> accessedsites)
     {
@@ -442,6 +461,13 @@ public class TransactionManager {
             dm.ReleaseSiteLocks(TransactionId,site);
         }
     }
+
+    /**
+     * unblock other transactions blocked by
+     * this one
+     * @param TransactionId
+     * @author jingshuai jiang
+     */
 
     public void UnblockTransactions(int TransactionId)
     {
@@ -464,6 +490,13 @@ public class TransactionManager {
         }
     }
 
+    /**
+     * see if this transaction is alive
+     * @param TransactionId
+     * @return
+     * @author jingshuai jiang
+     */
+
     public boolean AliveChecker(int TransactionId)
     {
         if(!TransactionMap.containsKey(TransactionId))
@@ -474,11 +507,25 @@ public class TransactionManager {
         return true;
     }
 
+    /**
+     * recover some site
+     * @param SiteId
+     * @return
+     * @author jingshuai jiang
+     */
+
     public boolean Recover(int SiteId)
     {
         dm.Recover(SiteId,timestamp);
         return true;
     }
+
+    /**
+     * some site got failed
+     * @param SiteId
+     * @return
+     * @author jingshuai jiang
+     */
 
     public boolean Fail(int SiteId)
     {
