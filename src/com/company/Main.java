@@ -4,7 +4,12 @@ import java.io.*;
 
 public class Main {
 
-
+    /**
+     * main function
+     * entry of our program
+     * @param args
+     * @author allen
+     */
     public static void main(String[] args) {
         TransactionManager tm = new TransactionManager();
         List<String[]> insWaitlist = new LinkedList<>();
@@ -18,6 +23,7 @@ public class Main {
             while (true) {
                 String[] res = null;
                 inList = false;
+                //reading instructions from the waitlist
                 if (!insWaitlist.isEmpty() && idx < insWaitlist.size()) {
                     System.out.println("idx:" + idx);
                     res = insWaitlist.get(idx);
@@ -26,6 +32,7 @@ public class Main {
                     System.out.println();
                     inList = true;
                 }
+                //read instructions from the input file
                 else {
                     if ( (query = br.readLine()) != null) {
                         System.out.println("query: "+query);
