@@ -288,8 +288,57 @@ public class TransactionManager {
      */
     public void DetectDeadLock()
     {
+        Iterator<Map.Entry<Integer, Transaction>> itr = TransactionMap.entrySet().iterator();
 
+        LinkedList<Integer> lst = new LinkedList<Integer> ();
+
+        if (!itr.hasNext()) {
+            System.out.print("No Transaction currently exist");
+            return;
+        }
+
+        while (itr.hasNext()) {
+            Map.Entry<Integer, Transaction> entry = itr.next();
+            int tid = entry.getKey();
+            if (lst.contains(tid)) {
+                continue;
+            }
+            lst.clear();
+            lst.add(tid);
+            Transaction t = TransactionMap.get(tid);
+            while (t.WaitingForTransactionId != -1) {
+                if (lst.contains(t.WaitingForTransactionId)) {
+                    System.out.print("deadlock detected");
+                    int youngestId = findYoungest(lst);
+                    AbortTransaction(youngestId);
+                    return;
+                }
+
+                lst.add(t.WaitingForTransactionId);
+                t = TransactionMap.get(t.WaitingForTransactionId);
+            }
+        }
     }
+
+
+    /**
+     * find the youngest transaction id
+     * @param lst, a LinkedList<Integer>
+     *
+     * */
+    public int findYoungest (LinkedList<Integer> lst) {
+        int youngestId = -1;
+        int youngestTime = Integer.MAX_VALUE;
+        for (int id : lst) {
+            Transaction t = TransactionMap.get(id);
+            if (t.start_time < youngestTime) {
+                youngestId = id;
+                youngestTime = t.start_time;
+            }
+        }
+        return youngestId;
+    }
+
 
     public void AbortTransactions(int siteId)
     {
