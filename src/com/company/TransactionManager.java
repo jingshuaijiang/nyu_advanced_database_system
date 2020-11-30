@@ -316,25 +316,6 @@ public class TransactionManager {
         return false;
     }
 
-    /**
-     * acquire write lock
-     * @param TransactionId
-     * @param VariableId
-     * @return
-     */
-    public boolean AcquireWriteLock(int TransactionId,int VariableId)
-    {
-        return true;
-    }
-
-    /**
-     * Detect deadlock
-     */
-    public void DetectDeadLock()
-    {
-
-    }
-
     public void AbortTransactions(int siteId)
     {
         for(int id:TransactionMap.keySet())
@@ -354,6 +335,7 @@ public class TransactionManager {
         Transaction trans = TransactionMap.get(TransactionId);
         trans.aborted = true;
         ReleaseLocks(TransactionId,trans.accessedsites);
+        UnblockTransactions(TransactionId);
     }
 
     public void ReleaseLocks(int TransactionId,HashSet<Integer> accessedsites)
@@ -363,6 +345,15 @@ public class TransactionManager {
         for(int site:accessedsites)
         {
             dm.ReleaseSiteLocks(TransactionId,site);
+        }
+    }
+
+    public void UnblockTransactions(int TransactionId)
+    {
+        for(Transaction trans:TransactionMap.values())
+        {
+            if(trans.WaitingForTransactionId==TransactionId&&trans.blocked)
+                trans.blocked=false;
         }
     }
 
