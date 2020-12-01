@@ -13,7 +13,9 @@ public class Main {
     public static void main(String[] args) {
         TransactionManager tm = new TransactionManager();
         List<String[]> insWaitlist = new LinkedList<>();
-        String inputfile = "C:\\Users\\jingshuai jiang\\Desktop\\NYU\\advanced_database\\project\\nyu_advanced_database_system\\testCases\\testcase4.txt";
+        // String inputfile = "C:\\Users\\jingshuai jiang\\Desktop\\NYU\\advanced_database\\project\\nyu_advanced_database_system\\testCases\\testcase4.txt";
+        String inputfile = "/Users/allenliu/Desktop/cs2434 Advanced Datebase System/nyu_advanced_database_system/testCases/";
+        inputfile += "testcase21.txt";
         boolean status, inList;
         int idx = 0;
         String query;
@@ -35,7 +37,9 @@ public class Main {
                 //read instructions from the input file
                 else {
                     if ( (query = br.readLine()) != null) {
-                        System.out.println("query: "+query);
+                        System.out.println("query: "+ query);
+                        if (query.indexOf("//") != -1)  query = query.substring(0, query.indexOf("//"));
+                        if (query.equals((""))) continue;
                         res = Parser.parse(query);
                         System.out.println("text:");
                         for (String s : res)    System.out.print(s + ' ');

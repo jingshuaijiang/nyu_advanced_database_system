@@ -1,12 +1,10 @@
-//T2 aborts
-//T4 aborts. T3 writes
+begin(T3)
 begin(T1)
 begin(T2)
-begin(T3)
-W(T1, x1,5); W(T3, x2,32)
-W(T2, x1,17);
-end(T1); begin(T4)
-W(T4, x4,35); W(T3, x5,21)
-W(T4,x2,21); W(T3,x4,23)
+W(T3,x2,22)
+W(T2,x4,44)
+R(T3,x4)
+end(T2)
 end(T3)
-dump()
+R(T1,x2)
+end(T1)

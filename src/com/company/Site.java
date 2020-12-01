@@ -197,9 +197,9 @@ public class Site {
         failed = true;
     }
 
-    public void write (int varId, int value, int timestap) {
+    public void write (int varId, int value, int timestamp) {
         List<Variable> lst = vartable.get(varId);
-        Variable v = new Variable(timestap, value);
+        Variable v = new Variable(timestamp, value);
         lst.add(v);
     }
 

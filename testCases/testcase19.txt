@@ -1,42 +1,22 @@
-// Test 1
-//
-// Main Test Idea:
-// ---------------
-// - Test that a TX with a lock at a failed site fails to commit
-// - Test that a TX can get locks for a variable after a site holding the var is noticed
-//   to be down by the TM. What should happen is that by the time the TX goes to write the
-//   variable, the variable should have already been re-replicated at another site, and
-//   thus the TX should write to a full 3 sites.
-// - Test the re-replication and load-balancing
-//
-// Variable x1 is at site 2
-// Variable x3 is at site 4
-// Variables x2 and x8 are at site 1, so:
-// T2 should fail to commit, as it has a write lock at site 1 which is down at that time
-// T1 should be fine, since TM knows at the time T1 goes for x8 that site 1 is down
-// T3 should write x2 to three sites, maybe site 1 maybe not
-//
-// Should also see some variable replication related to site 1 being down
 begin(T1)
 begin(T2)
 begin(T3)
-dump()
-R(T1,x1); R(T2,x2)	// T1 reads x1 from site 2, T2 reads x2 from site 1
-W(T1,x1,1); W(T2,x2,2)	// both writes should succeed
-fail(1)				// should cause T2 to fail to commit
-R(T3,x3)			// Should read from site 4
-R(T1,x8)			// Should read from site 2
-W(T3,x3,3)			// Should succeed
-R(T3,x4)			// Should read from site 2
-end(T2)				// Should fail to commit
-dump()
-W(T3,x4,4)			// Should succeed
-W(T1,x8,8)			// Should succeed
-end(T1)				// Should succeed
-recover(1)			
-dump()
-R(T3,x2)			// Should read from site 2 (because site 1 isnt available for reading)
-W(T3,x2,12)			// Should succeed
-dump()
-end(T3)				// Should succeed
-dump()
+begin(T4)
+begin(T5)
+R(T3,x3)
+fail(4)
+recover(4)
+R(T4,x4)
+R(T5,x5)
+R(T1,x6)
+R(T2,x2)
+W(T1,x2,10)
+W(T2,x3,20)
+W(T3,x4,30)
+W(T5,x1,50)
+end(T5)
+W(T4,x5,40)
+end(T4)
+end(T3)
+end(T2)
+end(T1)

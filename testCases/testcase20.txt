@@ -1,31 +1,25 @@
-// Test 2
-//
-// Main Test Idea:
-// ---------------
-// - Test that when a TX tries to get a lock at a failed site which hasn't
-//   been down for 3 time steps, and thus that the TM has yet to mark as down,
-//   the TX tries to get a lock on that site for the variable and eventually
-//   fails, either at commit time or via a timeout.
-//
-
-// If the R(T1,x2) went to site 2 then T1 should fail. Otherwise it
-// should succeed.
+// Test 20
+// From a student in 2017
 
 begin(T1)
 begin(T2)
-dump()
-R(T1,x2)		// Should read from site 1
-R(T2,x3)		// Should read from site 4
+W(T1,x2,9)
+fail(1) // T1 abort
+end(T1)
+begin(T3)
+W(T3,x2,100)
+end(T3)
+recover(1)
 fail(2)
-W(T1,x2,2)		// Should succeed
-W(T2,x3,3)		// Should succeed
-R(T2,x5)		// Should read from site 6
-W(T2,x5,5)		// Should succeed
-R(T2,x7)		// Should read from site 8
-W(T2,x7,7)		// Should succeed
-end(T1)			// Should succeed
-dump()
-end(T2)			// Should succeed
-dump()
-recover(2)
-dump()
+fail(3)
+fail(4)
+fail(5)
+fail(6)
+fail(7)
+fail(8)
+fail(9)
+fail(10)
+R(T2,x2) // T2 can't read x2 from site 1,
+// but doesn't hold a lock on x2 at site 1
+begin(T5)
+W(T5,x2,90) // T5 doesn't need to wait because T2 doesn't acquire a lock
