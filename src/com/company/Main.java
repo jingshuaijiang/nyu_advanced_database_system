@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args) {
         TransactionManager tm = new TransactionManager();
         List<String[]> insWaitlist = new LinkedList<>();
-        String inputfile = "C:\\Users\\jingshuai jiang\\Desktop\\NYU\\advanced_database\\project\\nyu_advanced_database_system\\testCases\\testcase4.txt";
+        String inputfile = args[0];
         boolean status, inList;
         int idx = 0;
         String query;

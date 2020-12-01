@@ -132,7 +132,10 @@ public class TransactionManager {
             //go and get history version
             //if failed then return false and wait.
             if(dm.SiteFailed(siteid))
+            {
+                transaction.blocked = true;
                 return false;
+            }
             else
             {
                 //as long as it's up, we go inside and get the value whose version is before the start_time;
@@ -162,6 +165,7 @@ public class TransactionManager {
             }
         }
         //all the sites are not suitable for replicated variables.
+        transaction.blocked = true;
         return false;
     }
 
@@ -505,6 +509,15 @@ public class TransactionManager {
             return false;
         }
         return true;
+    }
+
+    public void UnblockTransaction()
+    {
+        for(Transaction trans:TransactionMap.values())
+        {
+            if(trans.blocked&& trans.readonly)
+                trans.blocked=false;
+        }
     }
 
     /**
