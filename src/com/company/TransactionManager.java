@@ -88,6 +88,8 @@ public class TransactionManager {
         {
             //get the sitenumber
             int siteId = VarId%10+1;
+            if(dm.SiteFailed(siteId))
+                return false;
             //if we can get the read lock for this variable
             if(AcquireReadLock(TransactionId,VarId,siteId))
             {
@@ -101,8 +103,16 @@ public class TransactionManager {
         //replicated variables
         else
         {
+            boolean allfailed = false;
             for(int i=1;i<=DataManager.sitenums;i++)
             {
+                if(dm.SiteFailed(i))
+                {
+                    allfailed = allfailed || false;
+                    continue;
+                }
+                else
+                    allfailed = true;
                 if(AcquireReadLock(TransactionId,VarId,i))
                 {
                     if(!transaction.accessedsites.contains(i))
@@ -112,6 +122,8 @@ public class TransactionManager {
                     return true;
                 }
             }
+            if(!allfailed)
+                transaction.blocked = true;
         }
         return false;
     }
@@ -515,7 +527,7 @@ public class TransactionManager {
     {
         for(Transaction trans:TransactionMap.values())
         {
-            if(trans.blocked&& trans.readonly)
+            if(trans.blocked)
                 trans.blocked=false;
         }
     }

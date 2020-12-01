@@ -13,7 +13,8 @@ public class Main {
     public static void main(String[] args) {
         TransactionManager tm = new TransactionManager();
         List<String[]> insWaitlist = new LinkedList<>();
-        String inputfile = args[0];
+        String inputfile = "/Users/jiangjingshuai/Desktop/cloudml/vg-ibmcloud/javafile/testcase1.txt";
+//        String inputfile = args[0];
         boolean status, inList;
         int idx = 0;
         String query;
