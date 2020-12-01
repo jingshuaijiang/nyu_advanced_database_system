@@ -1,5 +1,5 @@
 // Test 12
-// T2 should not abort because it is not waiting on R(T1,x2). 
+// both commit
 begin(T1)
 begin(T2)
 R(T1,x2)
